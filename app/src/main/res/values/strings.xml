@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SafeAssist</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_contacts">Contacts</string>
+    <string name="nav_profile">My Info</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Home -->
+    <string name="helping_myself">Helping: Myself</string>
+    <string name="helping_someone">Helping: Someone Else</string>
+    <string name="switch_mode">Switch</string>
+    <string name="sos_prompt_title">Need help right now?</string>
+    <string name="sos_label">SOS</string>
+    <string name="sos_sublabel">TAP FOR HELP</string>
+    <string name="report_emergency_title">Report What Happened  →</string>
+    <string name="report_emergency_subtitle">Describe location and needs</string>
+    <string name="quick_call_title">Quick Call</string>
+
+    <!-- Default Hotline -->
+    <string name="default_mdrrmo_hotline">0966-768-2770</string>
+
+    <!-- SOS Countdown -->
+    <string name="sos_triggered_header">Starting SOS</string>
+    <string name="seconds_remaining">seconds</string>
+    <string name="attached_profile_header">MY INFO TO SHARE</string>
+    <string name="cancel_sos">CANCEL SOS</string>
+    <string name="stop_siren">Stop Siren</string>
+
+    <!-- SOS Ready to Send -->
+    <string name="sos_ready_title">Ready to Send</string>
+    <string name="not_sent_yet_title">Not Sent Yet</string>
+    <string name="not_sent_yet_sos_body">Tap Text or Call below to reach help.</string>
+    <string name="gps_title">My GPS Location</string>
+    <string name="gps_included">Included</string>
+    <string name="gps_excluded">Excluded</string>
+    <string name="my_message_header">MY MESSAGE</string>
+    <string name="copy_my_message">Copy My Message</string>
+
+    <!-- Report Emergency Details -->
+    <string name="where_and_needs">What Happened</string>
+    <string name="review_and_share">Review &amp; Send</string>
+    <string name="review_details_cta">Review My Message →</string>
+    <string name="not_sent_yet_review_body">Copy your message or call below.</string>
+    <string name="my_summary_title">My Report</string>
+</resources>

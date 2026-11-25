@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary & Brand -->
+    <color name="primary_blue">#1D4ED8</color>
+    <color name="primary_blue_dark">#1E40AF</color>
+    <color name="primary_blue_light">#EFF6FF</color>
+
+    <!-- SOS Red -->
+    <color name="sos_red">#DC2626</color>
+    <color name="sos_red_dark">#B91C1C</color>
+    <color name="sos_red_halo">#FEE2E2</color>
+    <color name="sos_banner_bg">#FEF2F2</color>
+    <color name="sos_banner_border">#FCA5A5</color>
+
+    <!-- Warning / Siren Amber -->
+    <color name="amber_bg">#FFFBEB</color>
+    <color name="amber_border">#F59E0B</color>
+    <color name="amber_dark">#B45309</color>
+    <color name="amber_text">#92400E</color>
+
+    <!-- Caregiver Mode Purple -->
+    <color name="caregiver_bg">#F3E8FF</color>
+    <color name="caregiver_border">#D8B4FE</color>
+    <color name="caregiver_text">#6B21A8</color>
+
+    <!-- Neutrals (High Contrast) -->
+    <color name="bg_light">#F8FAFC</color>
+    <color name="surface_white">#FFFFFF</color>
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#475569</color>
+    <color name="text_muted">#64748B</color>
+    <color name="border_subtle">#CBD5E1</color>
+    <color name="divider_light">#E2E8F0</color>
+    <color name="cancel_dark">#0F172A</color>
+    <color name="white">#FFFFFF</color>
+</resources>

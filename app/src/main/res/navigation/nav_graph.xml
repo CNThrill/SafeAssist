@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/setupFragment"
+        android:name="com.safeassist.maramag.ui.setup.SetupFragment"
+        android:label="Setup"
+        tools:layout="@layout/fragment_setup">
+        <action
+            android:id="@+id/action_setup_to_home"
+            app:destination="@id/homeFragment"
+            app:popUpTo="@id/setupFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.safeassist.maramag.ui.home.HomeFragment"
+        android:label="@string/nav_home"
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_home_to_sosCountdown"
+            app:destination="@id/sosCountdownFragment" />
+        <action
+            android:id="@+id/action_home_to_whereAndNeeds"
+            app:destination="@id/whereAndNeedsFragment" />
+        <action
+            android:id="@+id/action_home_to_contacts"
+            app:destination="@id/emergencyContactsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/emergencyContactsFragment"
+        android:name="com.safeassist.maramag.ui.contacts.EmergencyContactsFragment"
+        android:label="@string/nav_contacts"
+        tools:layout="@layout/fragment_emergency_contacts" />
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.safeassist.maramag.ui.profile.ProfileFragment"
+        android:label="@string/nav_profile"
+        tools:layout="@layout/fragment_profile" />
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.safeassist.maramag.ui.settings.SettingsFragment"
+        android:label="@string/nav_settings"
+        tools:layout="@layout/fragment_settings" />
+
+    <fragment
+        android:id="@+id/sosCountdownFragment"
+        android:name="com.safeassist.maramag.ui.sos.SosCountdownFragment"
+        android:label="@string/sos_triggered_header"
+        tools:layout="@layout/fragment_sos_countdown">
+        <action
+            android:id="@+id/action_sosCountdown_to_sosReadyToSend"
+            app:destination="@id/sosReadyToSendFragment"
+            app:popUpTo="@id/homeFragment"
+            app:popUpToInclusive="false" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/sosReadyToSendFragment"
+        android:name="com.safeassist.maramag.ui.sos.SosReadyToSendFragment"
+        android:label="@string/sos_ready_title"
+        tools:layout="@layout/fragment_sos_ready_to_send" />
+
+    <fragment
+        android:id="@+id/whereAndNeedsFragment"
+        android:name="com.safeassist.maramag.ui.prepare.WhereAndNeedsFragment"
+        android:label="@string/where_and_needs"
+        tools:layout="@layout/fragment_where_and_needs">
+        <action
+            android:id="@+id/action_whereAndNeeds_to_reviewAndShare"
+            app:destination="@id/reviewAndShareFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/reviewAndShareFragment"
+        android:name="com.safeassist.maramag.ui.prepare.ReviewAndShareFragment"
+        android:label="@string/review_and_share"
+        tools:layout="@layout/fragment_review_and_share" />
+
+</navigation>
