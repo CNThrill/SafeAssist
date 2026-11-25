@@ -22,14 +22,8 @@
     <!-- Default Hotline -->
     <string name="default_mdrrmo_hotline">0966-768-2770</string>
 
-    <!-- SOS Countdown -->
-    <string name="sos_triggered_header">Starting SOS</string>
-    <string name="seconds_remaining">seconds</string>
-    <string name="attached_profile_header">MY INFO TO SHARE</string>
-    <string name="cancel_sos">CANCEL SOS</string>
-    <string name="stop_siren">Stop Siren</string>
-
     <!-- SOS Ready to Send -->
+    <string name="stop_siren">Stop Siren</string>
     <string name="sos_ready_title">Ready to Send</string>
     <string name="not_sent_yet_title">Not Sent Yet</string>
     <string name="not_sent_yet_sos_body">Tap Text or Call below to reach help.</string>

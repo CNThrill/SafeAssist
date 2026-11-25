@@ -23,10 +23,10 @@ SafeAssist is an offline-first native Android application (Kotlin, XML, Material
 - Collects full name, **callback phone number**, Barangay, Purok, street/house description, nearest landmark, assistance/mobility profile, and optional handling notes locally on the device.
 - Automatically pre-fills SOS messages and self-reported incident drafts so users do not have to type under stress.
 
-### Primary Path: One-Tap SOS (`SosCountdownFragment` -> `SosReadyToSendFragment`)
-- **Cancelable countdown:** Configurable 3s, 5s (default), or 10s countdown with a full-width **CANCEL SOS** button and hardware back-press cancellation so accidental taps never trigger a false alert (`D8`).
-- **Post-countdown siren:** Optional alarm-stream siren (`AudioAttributes.USAGE_ALARM`) triggers only *after* the countdown finishes without cancellation, with an immediate **Stop Siren** control (`D10`).
-- **Post-countdown GPS + fallback:** Reads offline GPS/Network/Fused coordinates via Android `LocationManager` after the countdown finishes (respecting a 15-minute cache freshness limit), includes an opt-in **Included / Excluded** toggle chip, and falls back to the saved Barangay/Purok/landmark outdoors or indoors (`D9`).
+### Primary Path: One-Tap SOS (`SosReadyToSendFragment`)
+- **Immediate SOS access:** Tapping the SOS button on Home goes directly to the Ready-to-Send screen with no intermediate countdown — the siren (if enabled) and GPS location fetch start the moment the screen opens so there is no delay between intent and action.
+- **Siren on trigger:** Optional alarm-stream siren (`AudioAttributes.USAGE_ALARM`) starts immediately when SOS is opened (if enabled in Settings), with an immediate **Stop Siren** control on the same screen (`D10`).
+- **GPS + fallback:** Reads offline GPS/Network/Fused coordinates via Android `LocationManager` using a 15-second live-fix scan window (instead of the previous 6-second window, giving pure satellite GPS enough time to lock in areas without Wi-Fi or mobile data) and a 15-minute cache freshness limit. Includes an opt-in **Included / Excluded** toggle chip; falls back to the saved Barangay/Purok/landmark when GPS is unavailable or disabled (`D9`).
 - **Manual handoff actions:** Displays a prominent **Not Sent Yet** banner and lets the user tap **Send Text to MDRRMO**, **Call MDRRMO**, **Send Text to [Trusted Contact]**, or **Copy My Message**.
 
 ### Secondary Path: Report What Happened (`WhereAndNeedsFragment` -> `ReviewAndShareFragment`)
@@ -49,6 +49,7 @@ SafeAssist is an offline-first native Android application (Kotlin, XML, Material
 As we translated our Design Phase wireframes into a testable Android prototype, we made a few focused simplifications to reduce clutter and panic-time friction:
 
 - **Removed Home summary cards, status badges, and external URL launchers:** We stripped non-interactive badges (`Offline ready`, `Saved only on this device`, `Awaiting verification`) and kept Home unscrollable (wrapped in a `fillViewport` scroll container only as an overflow safeguard for small screens or large system font sizes).
+- **Removed SOS countdown screen:** Our early wireframes included a configurable 3s/5s/10s countdown (`D8`) to prevent accidental SOS triggers. Field feedback during prototype testing indicated the intermediate screen added friction when users needed help immediately, so we removed the countdown and routed the SOS button directly to the Ready-to-Send screen. The siren and GPS fetch now start immediately when Ready-to-Send opens; the **Not Sent Yet** banner remains as the deliberate handoff boundary before any message is actually sent.
 - **Direct action buttons on Ready-to-Send:** We show **Send Text to MDRRMO**, **Call MDRRMO**, and **Copy My Message** directly on the Ready-to-Send screen so users can pick their channel immediately while the `"Not Sent Yet"` boundary stays visible.
 - **Manual Barangay & Purok entry:** We kept Barangay and Purok as plain text inputs rather than hardcoded dropdown lists so we do not ship unverified municipal/purok records.
 
@@ -76,7 +77,7 @@ com.safeassist.maramag
 │   ├── profile/     # ProfileFragment
 │   ├── settings/    # SettingsFragment
 │   ├── prepare/     # WhereAndNeedsFragment, ReviewAndShareFragment
-│   └── sos/         # SosCountdownFragment, SosReadyToSendFragment
+│   └── sos/         # SosReadyToSendFragment
 ├── utils/           # EmergencyMessageFormatter, DateTimeUtils
 └── viewmodel/       # HomeViewModel, ProfileViewModel, ContactsViewModel, SettingsViewModel,
                      # PrepareEmergencyViewModel, SosViewModel, SetupViewModel, SafeAssistViewModelFactory
@@ -119,5 +120,5 @@ adb install -r app\build\outputs\apk\debug\app-debug.apk
 
 - **No automatic dispatch or delivery tracking:** SafeAssist prepares messages and dialer handoffs only; actual transmission still requires cellular or data signal (or showing the screen to a neighbor/BHW when signal is out).
 - **Hotline verification pending:** `0966-768-2770` is taken from the Sept 29, 2026 MDRRMO Maramag Facebook post (`EV-06`) and still requires direct confirmation with MDRRMO; users can update it in **Contacts**.
-- **Pending field usability testing:** Features introduced during the design phase—such as the SOS countdown, plain-text GPS preview, and alarm siren—still need field usability testing with Maramag PWDs, seniors, caregivers, and responders.
+- **Pending field usability testing:** Features introduced during the design phase — such as the plain-text GPS preview and alarm siren — still need field usability testing with Maramag PWDs, seniors, caregivers, and responders.
 - **Hardware volume bounds:** Android does not allow apps to override a hardware-muted alarm channel; the siren plays at the device's permitted alarm volume.

@@ -11,7 +11,6 @@ import com.safeassist.maramag.model.UserProfile
 import com.safeassist.maramag.repository.SafeAssistRepository
 import com.safeassist.maramag.utils.EmergencyMessageFormatter
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -46,72 +45,32 @@ class SosViewModel(
 
     val isSirenPlaying: StateFlow<Boolean> = sirenManager.isPlaying
 
-    private val _secondsRemaining = MutableStateFlow(5)
-    val secondsRemaining: StateFlow<Int> = _secondsRemaining.asStateFlow()
-
-    private val _countdownFinished = MutableStateFlow(false)
-    val countdownFinished: StateFlow<Boolean> = _countdownFinished.asStateFlow()
-
     private val _locationResult = MutableStateFlow<LocationResult>(LocationResult.Loading)
     val locationResult: StateFlow<LocationResult> = _locationResult.asStateFlow()
 
     private val _includeGpsInMessage = MutableStateFlow(false)
     val includeGpsInMessage: StateFlow<Boolean> = _includeGpsInMessage.asStateFlow()
 
-    private var countdownJob: Job? = null
     private var locationJob: Job? = null
     private var hasPromptedLocationThisSos = false
 
-    fun startSosCountdown() {
-        countdownJob?.cancel()
+    fun startSosSession() {
         locationJob?.cancel()
         sirenManager.stopSiren()
         hasPromptedLocationThisSos = false
-        _countdownFinished.value = false
         _locationResult.value = LocationResult.Loading
         _includeGpsInMessage.value = false
-
-        countdownJob = viewModelScope.launch {
+        viewModelScope.launch {
             val settings = repository.appSettings.first()
-            val duration = settings.sosCountdownSeconds.coerceIn(3, 10)
-            _secondsRemaining.value = duration
-
-            for (sec in duration downTo 1) {
-                _secondsRemaining.value = sec
-                delay(1000L)
-            }
-            _secondsRemaining.value = 0
-
-            // Siren only triggers after countdown finishes without cancellation
-            if (settings.sirenEnabled) {
-                sirenManager.startSiren()
-            }
+            if (settings.sirenEnabled) sirenManager.startSiren()
             if (settings.askGpsBeforeSending && locationProvider.hasLocationPermission()) {
                 fetchLocationIfPermitted()
             }
-            _countdownFinished.value = true
         }
-    }
-
-    fun consumeCountdownFinished() {
-        _countdownFinished.value = false
-    }
-
-    fun cancelSos() {
-        countdownJob?.cancel()
-        countdownJob = null
-        locationJob?.cancel()
-        locationJob = null
-        _countdownFinished.value = false
-        sirenManager.stopSiren()
     }
 
     fun stopSiren() {
         sirenManager.stopSiren()
-    }
-
-    suspend fun isGpsEnabledInSettings(): Boolean {
-        return repository.appSettings.first().askGpsBeforeSending
     }
 
     fun shouldPromptLocationPermissionThisSos(): Boolean = !hasPromptedLocationThisSos
@@ -170,7 +129,7 @@ class SosViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        countdownJob?.cancel()
+        locationJob?.cancel()
         sirenManager.stopSiren()
     }
 }

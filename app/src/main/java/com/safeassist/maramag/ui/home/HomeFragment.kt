@@ -56,7 +56,7 @@ class HomeFragment : Fragment() {
         }
 
         binding.btnSos.setOnClickListener {
-            SafeAssistNavigator.navigateToSosCountdown(findNavController())
+            SafeAssistNavigator.navigateToSos(findNavController())
         }
 
         binding.btnPrepareDetails.setOnClickListener {

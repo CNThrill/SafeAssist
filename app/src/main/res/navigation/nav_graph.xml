@@ -23,8 +23,8 @@
         android:label="@string/nav_home"
         tools:layout="@layout/fragment_home">
         <action
-            android:id="@+id/action_home_to_sosCountdown"
-            app:destination="@id/sosCountdownFragment" />
+            android:id="@+id/action_home_to_sosReadyToSend"
+            app:destination="@id/sosReadyToSendFragment" />
         <action
             android:id="@+id/action_home_to_whereAndNeeds"
             app:destination="@id/whereAndNeedsFragment" />
@@ -50,18 +50,6 @@
         android:name="com.safeassist.maramag.ui.settings.SettingsFragment"
         android:label="@string/nav_settings"
         tools:layout="@layout/fragment_settings" />
-
-    <fragment
-        android:id="@+id/sosCountdownFragment"
-        android:name="com.safeassist.maramag.ui.sos.SosCountdownFragment"
-        android:label="@string/sos_triggered_header"
-        tools:layout="@layout/fragment_sos_countdown">
-        <action
-            android:id="@+id/action_sosCountdown_to_sosReadyToSend"
-            app:destination="@id/sosReadyToSendFragment"
-            app:popUpTo="@id/homeFragment"
-            app:popUpToInclusive="false" />
-    </fragment>
 
     <fragment
         android:id="@+id/sosReadyToSendFragment"

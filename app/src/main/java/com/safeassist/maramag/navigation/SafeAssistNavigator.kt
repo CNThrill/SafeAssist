@@ -5,15 +5,9 @@ import com.safeassist.maramag.R
 
 object SafeAssistNavigator {
 
-    fun navigateToSosCountdown(navController: NavController) {
+    fun navigateToSos(navController: NavController) {
         if (navController.currentDestination?.id == R.id.homeFragment) {
-            navController.navigate(R.id.action_home_to_sosCountdown)
-        }
-    }
-
-    fun navigateToSosReadyToSend(navController: NavController) {
-        if (navController.currentDestination?.id == R.id.sosCountdownFragment) {
-            navController.navigate(R.id.action_sosCountdown_to_sosReadyToSend)
+            navController.navigate(R.id.action_home_to_sosReadyToSend)
         }
     }
 

@@ -103,25 +103,22 @@ class SosReadyToSendFragment : Fragment() {
             }
         )
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            gpsEnabledInSettings = viewModel.isGpsEnabledInSettings()
-            if (gpsEnabledInSettings) {
-                if (viewModel.hasLocationPermission()) {
-                    viewModel.ensureLocationFetchedIfPermitted()
-                } else {
-                    viewModel.markLocationPermissionNeeded()
-                    if (viewModel.shouldPromptLocationPermissionThisSos()) {
-                        viewModel.markLocationPermissionPromptedThisSos()
-                        manualGpsPromptRequested = false
-                        locationPermissionLauncher.launch(
-                            arrayOf(
-                                Manifest.permission.ACCESS_FINE_LOCATION,
-                                Manifest.permission.ACCESS_COARSE_LOCATION
-                            )
-                        )
-                    }
-                }
-            } else {
+        if (savedInstanceState == null) {
+            viewModel.startSosSession()
+            gpsEnabledInSettings = viewModel.appSettings.value.askGpsBeforeSending
+            if (gpsEnabledInSettings &&
+                !viewModel.hasLocationPermission() &&
+                viewModel.shouldPromptLocationPermissionThisSos()
+            ) {
+                viewModel.markLocationPermissionPromptedThisSos()
+                manualGpsPromptRequested = false
+                locationPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                )
+            } else if (!gpsEnabledInSettings) {
                 viewModel.markGpsDisabledInSettings()
             }
         }

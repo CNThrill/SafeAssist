@@ -5,7 +5,6 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.safeassist.maramag.model.AppSettings
@@ -19,7 +18,6 @@ class SettingsDataStore(private val context: Context) {
     private object Keys {
         val HAS_COMPLETED_SETUP = booleanPreferencesKey("has_completed_setup")
         val HAS_REQUESTED_INITIAL_PERMISSIONS = booleanPreferencesKey("has_requested_initial_permissions")
-        val SOS_COUNTDOWN_SECONDS = intPreferencesKey("sos_countdown_seconds")
         val SIREN_ENABLED = booleanPreferencesKey("siren_enabled")
         val SIREN_USER_OVERRIDDEN = booleanPreferencesKey("siren_user_overridden")
         val ASK_GPS_BEFORE_SENDING = booleanPreferencesKey("ask_gps_before_sending")
@@ -31,7 +29,6 @@ class SettingsDataStore(private val context: Context) {
         AppSettings(
             hasCompletedSetup = prefs[Keys.HAS_COMPLETED_SETUP] ?: false,
             hasRequestedInitialPermissions = prefs[Keys.HAS_REQUESTED_INITIAL_PERMISSIONS] ?: false,
-            sosCountdownSeconds = prefs[Keys.SOS_COUNTDOWN_SECONDS] ?: 5,
             sirenEnabled = prefs[Keys.SIREN_ENABLED] ?: false,
             sirenUserOverridden = prefs[Keys.SIREN_USER_OVERRIDDEN] ?: false,
             askGpsBeforeSending = prefs[Keys.ASK_GPS_BEFORE_SENDING] ?: true,
@@ -47,10 +44,6 @@ class SettingsDataStore(private val context: Context) {
 
     suspend fun setHasRequestedInitialPermissions(requested: Boolean) {
         context.dataStore.edit { it[Keys.HAS_REQUESTED_INITIAL_PERMISSIONS] = requested }
-    }
-
-    suspend fun setSosCountdownSeconds(seconds: Int) {
-        context.dataStore.edit { it[Keys.SOS_COUNTDOWN_SECONDS] = seconds }
     }
 
     suspend fun setSirenEnabled(enabled: Boolean, userOverridden: Boolean = true) {

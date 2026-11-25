@@ -45,9 +45,6 @@ class SafeAssistRepository(
     suspend fun setHasRequestedInitialPermissions(requested: Boolean) =
         settingsDataStore.setHasRequestedInitialPermissions(requested)
 
-    suspend fun setSosCountdownSeconds(seconds: Int) =
-        settingsDataStore.setSosCountdownSeconds(seconds)
-
     suspend fun setSirenEnabled(enabled: Boolean) =
         settingsDataStore.setSirenEnabled(enabled, userOverridden = true)
 

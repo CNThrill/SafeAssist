@@ -39,7 +39,7 @@ class LocationProvider(private val context: Context) {
     }
 
     @SuppressLint("MissingPermission")
-    suspend fun getCurrentOrLastKnownLocation(timeoutMs: Long = 6000L): LocationResult {
+    suspend fun getCurrentOrLastKnownLocation(timeoutMs: Long = 15000L): LocationResult {
         if (!hasLocationPermission()) {
             return LocationResult.Unavailable("Location permission needed. Using my saved address.")
         }
@@ -189,11 +189,20 @@ class LocationProvider(private val context: Context) {
                 null
             } ?: continue
             if (now - loc.time > LAST_KNOWN_MAX_AGE_MS) continue
-            if (best == null || loc.accuracy < best.accuracy) {
+            if (best == null || isBetterLocation(loc, best)) {
                 best = loc
             }
         }
         return best
+    }
+
+    private fun isBetterLocation(candidate: Location, current: Location): Boolean {
+        val timeDelta = candidate.time - current.time
+        // A meaningfully newer fix wins outright
+        if (timeDelta > 30_000L) return true
+        if (timeDelta < -30_000L) return false
+        // Same age bracket: prefer tighter accuracy
+        return candidate.accuracy < current.accuracy
     }
 
     companion object {
