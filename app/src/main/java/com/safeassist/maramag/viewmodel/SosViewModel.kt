@@ -53,11 +53,13 @@ class SosViewModel(
 
     private var locationJob: Job? = null
     private var hasPromptedLocationThisSos = false
+    private var hasPromptedEnableLocationThisSos = false
 
     fun startSosSession() {
         locationJob?.cancel()
         sirenManager.stopSiren()
         hasPromptedLocationThisSos = false
+        hasPromptedEnableLocationThisSos = false
         _locationResult.value = LocationResult.Loading
         _includeGpsInMessage.value = false
         viewModelScope.launch {
@@ -77,6 +79,12 @@ class SosViewModel(
 
     fun markLocationPermissionPromptedThisSos() {
         hasPromptedLocationThisSos = true
+    }
+
+    fun shouldPromptEnableLocationThisSos(): Boolean = !hasPromptedEnableLocationThisSos
+
+    fun markEnableLocationPromptedThisSos() {
+        hasPromptedEnableLocationThisSos = true
     }
 
     fun markGpsDisabledInSettings() {

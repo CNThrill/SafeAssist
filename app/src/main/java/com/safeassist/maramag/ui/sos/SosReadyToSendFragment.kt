@@ -1,6 +1,7 @@
 package com.safeassist.maramag.ui.sos
 
 import android.Manifest
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -10,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -17,6 +19,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.LocationSettingsRequest
+import com.google.android.gms.location.Priority
 import com.safeassist.maramag.R
 import com.safeassist.maramag.SafeAssistApplication
 import com.safeassist.maramag.communication.CommunicationHelper
@@ -39,6 +46,20 @@ class SosReadyToSendFragment : Fragment() {
     private var gpsEnabledInSettings = true
     private var manualGpsPromptRequested = false
 
+    private val locationSettingsLauncher = registerForActivityResult(
+        ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            viewModel.fetchLocationIfPermitted()
+        } else {
+            Toast.makeText(
+                requireContext(),
+                "Location is still off. Using saved address.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -46,7 +67,12 @@ class SosReadyToSendFragment : Fragment() {
             permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         if (granted) {
             manualGpsPromptRequested = false
-            viewModel.fetchLocationIfPermitted()
+            if (viewModel.isDeviceLocationEnabled()) {
+                viewModel.fetchLocationIfPermitted()
+            } else if (viewModel.shouldPromptEnableLocationThisSos()) {
+                viewModel.markEnableLocationPromptedThisSos()
+                promptEnableDeviceLocation(openSettingsOnFallback = false)
+            }
         } else {
             viewModel.markLocationPermissionNeeded()
             val permanentlyDenied = manualGpsPromptRequested &&
@@ -118,6 +144,13 @@ class SosReadyToSendFragment : Fragment() {
                         Manifest.permission.ACCESS_COARSE_LOCATION
                     )
                 )
+            } else if (gpsEnabledInSettings &&
+                viewModel.hasLocationPermission() &&
+                !viewModel.isDeviceLocationEnabled() &&
+                viewModel.shouldPromptEnableLocationThisSos()
+            ) {
+                viewModel.markEnableLocationPromptedThisSos()
+                promptEnableDeviceLocation(openSettingsOnFallback = false)
             } else if (!gpsEnabledInSettings) {
                 viewModel.markGpsDisabledInSettings()
             }
@@ -139,15 +172,7 @@ class SosReadyToSendFragment : Fragment() {
                     )
                 }
                 !viewModel.isDeviceLocationEnabled() -> {
-                    try {
-                        startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
-                    } catch (_: Exception) {
-                        Toast.makeText(
-                            requireContext(),
-                            "Turn on Location in device Settings to include GPS.",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
+                    promptEnableDeviceLocation(openSettingsOnFallback = true)
                 }
                 else -> {
                     viewModel.fetchLocationIfPermitted()
@@ -274,6 +299,47 @@ class SosReadyToSendFragment : Fragment() {
                     }
                 }
             }
+        }
+    }
+
+    private fun promptEnableDeviceLocation(openSettingsOnFallback: Boolean) {
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000L).build()
+        val settingsRequest = LocationSettingsRequest.Builder()
+            .addLocationRequest(locationRequest)
+            .setAlwaysShow(true)
+            .build()
+
+        LocationServices.getSettingsClient(requireActivity())
+            .checkLocationSettings(settingsRequest)
+            .addOnSuccessListener {
+                if (isAdded) {
+                    viewModel.fetchLocationIfPermitted()
+                }
+            }
+            .addOnFailureListener { exception ->
+                if (!isAdded) return@addOnFailureListener
+                if (exception is ResolvableApiException) {
+                    try {
+                        val intentSenderRequest = IntentSenderRequest.Builder(exception.resolution).build()
+                        locationSettingsLauncher.launch(intentSenderRequest)
+                    } catch (_: Exception) {
+                        if (openSettingsOnFallback) openLocationSettingsFallback()
+                    }
+                } else if (openSettingsOnFallback) {
+                    openLocationSettingsFallback()
+                }
+            }
+    }
+
+    private fun openLocationSettingsFallback() {
+        try {
+            startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+        } catch (_: Exception) {
+            Toast.makeText(
+                requireContext(),
+                "Turn on Location in device Settings to include GPS.",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
