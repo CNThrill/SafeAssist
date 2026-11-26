@@ -116,9 +116,25 @@ class EmergencyContactsFragment : Fragment() {
                 binding.containerTrustedContacts,
                 false
             )
-            itemBinding.tvContactName.text = contact.name
+            itemBinding.tvContactName.text = if (contact.isPrimary) {
+                "${contact.name} (Pinned)"
+            } else {
+                contact.name
+            }
             itemBinding.tvContactRole.text = contact.relationshipOrRole.ifBlank { "Trusted Contact" }
             itemBinding.tvContactPhone.text = contact.phoneNumber
+
+            itemBinding.btnPinTrusted.text = if (contact.isPrimary) "Unpin" else "Pin"
+            itemBinding.btnPinTrusted.isEnabled = true
+            itemBinding.btnPinTrusted.setOnClickListener {
+                if (contact.isPrimary) {
+                    viewModel.unpinContacts()
+                    Toast.makeText(requireContext(), "Unpinned ${contact.name}", Toast.LENGTH_SHORT).show()
+                } else {
+                    viewModel.pinContact(contact)
+                    Toast.makeText(requireContext(), "Pinned ${contact.name} to Home", Toast.LENGTH_SHORT).show()
+                }
+            }
 
             itemBinding.btnCallTrusted.setOnClickListener {
                 val res = CommunicationHelper.openDialer(requireContext(), contact.phoneNumber)
@@ -140,16 +156,29 @@ class EmergencyContactsFragment : Fragment() {
         val input = EditText(requireContext()).apply {
             setText(viewModel.appSettings.value.mdrrmoHotline)
             hint = "Phone number"
+            inputType = android.text.InputType.TYPE_CLASS_PHONE
         }
-        AlertDialog.Builder(requireContext())
+        val dialog = AlertDialog.Builder(requireContext())
             .setTitle("Edit MDRRMO Number")
             .setView(input)
-            .setPositiveButton("Save") { _, _ ->
-                viewModel.updateMdrrmoHotline(input.text.toString())
-                Toast.makeText(requireContext(), "Number updated.", Toast.LENGTH_SHORT).show()
-            }
+            .setPositiveButton("Save", null)
             .setNegativeButton("Cancel", null)
-            .show()
+            .create()
+
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val number = input.text.toString().trim()
+                if (number.count { it.isDigit() } < 7) {
+                    input.error = "Enter a valid phone number"
+                    Toast.makeText(requireContext(), "Please enter a valid phone number.", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                viewModel.updateMdrrmoHotline(number)
+                Toast.makeText(requireContext(), "Number updated.", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+            }
+        }
+        dialog.show()
     }
 
     private fun showAddTrustedContactDialog() {
@@ -167,16 +196,27 @@ class EmergencyContactsFragment : Fragment() {
         layout.addView(etRole)
         layout.addView(etPhone)
 
-        AlertDialog.Builder(requireContext())
+        val dialog = AlertDialog.Builder(requireContext())
             .setTitle("Add Trusted Contact")
             .setView(layout)
-            .setPositiveButton("Save") { _, _ ->
+            .setPositiveButton("Save", null)
+            .setNegativeButton("Cancel", null)
+            .create()
+
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 val name = etName.text.toString().trim()
                 val phone = etPhone.text.toString().trim()
                 val role = etRole.text.toString().trim()
-                if (name.isBlank() || phone.isBlank()) {
-                    Toast.makeText(requireContext(), "Name and phone number are required.", Toast.LENGTH_SHORT).show()
-                    return@setPositiveButton
+                if (name.isBlank()) {
+                    etName.error = "Name is required"
+                    Toast.makeText(requireContext(), "Name and valid phone number are required.", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                if (phone.count { it.isDigit() } < 7) {
+                    etPhone.error = "Enter a valid phone number"
+                    Toast.makeText(requireContext(), "Please enter a valid phone number.", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
                 }
                 viewModel.saveContact(
                     EmergencyContact(
@@ -186,9 +226,10 @@ class EmergencyContactsFragment : Fragment() {
                     )
                 )
                 Toast.makeText(requireContext(), "Saved $name.", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
+        dialog.show()
     }
 
     override fun onDestroyView() {

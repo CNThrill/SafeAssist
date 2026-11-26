@@ -39,11 +39,22 @@ class SafeAssistRepository(
         contactDao.deleteContact(contact)
     }
 
+    suspend fun pinPrimaryContact(contactId: Long) {
+        contactDao.pinPrimaryContact(contactId)
+    }
+
+    suspend fun clearPrimaryContacts() {
+        contactDao.clearAllPrimary()
+    }
+
     suspend fun setHasCompletedSetup(completed: Boolean) =
         settingsDataStore.setHasCompletedSetup(completed)
 
     suspend fun setHasRequestedInitialPermissions(requested: Boolean) =
         settingsDataStore.setHasRequestedInitialPermissions(requested)
+
+    suspend fun setSosCountdownSeconds(seconds: Int) =
+        settingsDataStore.setSosCountdownSeconds(seconds)
 
     suspend fun setSirenEnabled(enabled: Boolean) =
         settingsDataStore.setSirenEnabled(enabled, userOverridden = true)

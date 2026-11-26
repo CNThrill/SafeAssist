@@ -43,6 +43,18 @@ class ContactsViewModel(private val repository: SafeAssistRepository) : ViewMode
         }
     }
 
+    fun pinContact(contact: EmergencyContact) {
+        viewModelScope.launch {
+            repository.pinPrimaryContact(contact.id)
+        }
+    }
+
+    fun unpinContacts() {
+        viewModelScope.launch {
+            repository.clearPrimaryContacts()
+        }
+    }
+
     fun updateMdrrmoHotline(hotline: String) {
         viewModelScope.launch {
             repository.setMdrrmoHotline(hotline)

@@ -63,7 +63,7 @@ class SirenForegroundService : Service() {
                 val channel = NotificationChannel(
                     CHANNEL_ID,
                     "Emergency Siren",
-                    NotificationManager.IMPORTANCE_LOW
+                    NotificationManager.IMPORTANCE_DEFAULT
                 ).apply {
                     description = "Keeps the SafeAssist emergency siren playing while using Messages."
                     setSound(null, null)
@@ -94,9 +94,12 @@ class SirenForegroundService : Service() {
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_shield)
-            .setContentTitle("SafeAssist Siren Active")
+            .setContentTitle("SafeAssist Emergency Siren Playing")
             .setContentText("Tap Stop Siren to silence the alarm.")
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setOngoing(true)
+            .setOnlyAlertOnce(true)
             .setContentIntent(openAppIntent)
             .addAction(0, getString(R.string.stop_siren), stopIntent)
             .build()
@@ -105,7 +108,7 @@ class SirenForegroundService : Service() {
     companion object {
         const val ACTION_START = "com.safeassist.maramag.action.START_SIREN"
         const val ACTION_STOP = "com.safeassist.maramag.action.STOP_SIREN"
-        private const val CHANNEL_ID = "safeassist_siren_channel"
+        private const val CHANNEL_ID = "safeassist_siren_active_v2"
         private const val NOTIFICATION_ID = 1001
     }
 }

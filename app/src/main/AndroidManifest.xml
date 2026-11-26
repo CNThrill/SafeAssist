@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Note: SEND_SMS and CALL_PHONE are intentionally NOT requested.
          SafeAssist uses ACTION_SENDTO and ACTION_DIAL so the user always confirms before sending or calling. -->

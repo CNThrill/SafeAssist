@@ -295,12 +295,21 @@
                 app:icon="@drawable/ic_copy" />
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_sms_mdrrmo_review"
+                style="@style/SafeAssist.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="Send Text to MDRRMO (0966-768-2770)"
+                app:icon="@drawable/ic_sms" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_sms_contact_review"
                 style="@style/SafeAssist.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:text="Send SMS to Contact"
+                android:text="Send Text to Someone Else"
                 app:icon="@drawable/ic_sms" />
 
             <com.google.android.material.button.MaterialButton

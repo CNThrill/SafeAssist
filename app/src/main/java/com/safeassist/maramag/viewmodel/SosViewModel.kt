@@ -76,12 +76,19 @@ class SosViewModel(
             if (settings.askGpsBeforeSending && locationProvider.hasLocationPermission()) {
                 fetchLocationIfPermitted()
             }
-            for (sec in COUNTDOWN_SECONDS downTo 1) {
-                _secondsRemaining.value = sec
-                delay(1000L)
+            val seconds = settings.sosCountdownSeconds
+            if (seconds > 0) {
+                for (sec in seconds downTo 1) {
+                    _secondsRemaining.value = sec
+                    delay(1000L)
+                }
             }
             _secondsRemaining.value = 0
-            if (settings.sirenEnabled) sirenManager.startSiren()
+            if (settings.sirenEnabled) {
+                sirenManager.startSiren()
+                // Give the foreground service time to call startForeground() before opening Messages
+                delay(150L)
+            }
             _countdownFinished.value = true
         }
     }

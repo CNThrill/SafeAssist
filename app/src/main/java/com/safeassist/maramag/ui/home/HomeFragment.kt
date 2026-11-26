@@ -103,12 +103,8 @@ class HomeFragment : Fragment() {
                 }
                 launch {
                     viewModel.emergencyContacts.collect { contacts ->
-                        binding.tvQuickTrustedSub.text = if (contacts.isEmpty()) {
-                            "Add in Contacts"
-                        } else {
-                            val first = contacts.firstOrNull { it.isPrimary } ?: contacts.first()
-                            first.name
-                        }
+                        val primary = contacts.firstOrNull { it.isPrimary } ?: contacts.firstOrNull()
+                        binding.tvQuickTrustedSub.text = primary?.name ?: "Add in Contacts"
                     }
                 }
             }
