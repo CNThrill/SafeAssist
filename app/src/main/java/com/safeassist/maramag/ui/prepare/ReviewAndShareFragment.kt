@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -70,14 +71,41 @@ class ReviewAndShareFragment : Fragment() {
             }
         }
 
-        binding.btnSmsContactReview.setOnClickListener {
-            val contacts = viewModel.emergencyContacts.value
-            val target = contacts.firstOrNull { it.isPrimary } ?: contacts.firstOrNull()
+        binding.btnSmsMdrrmoReview.setOnClickListener {
+            val hotline = viewModel.appSettings.value.mdrrmoHotline
             val message = viewModel.buildFormattedSummary()
-            val number = target?.phoneNumber.orEmpty()
-            val res = CommunicationHelper.openSmsApp(requireContext(), number, message)
+            val res = CommunicationHelper.openSmsApp(requireContext(), hotline, message)
             if (res is CommunicationHelper.ActionResult.Error) {
                 Toast.makeText(requireContext(), res.message, Toast.LENGTH_LONG).show()
+            }
+        }
+
+        binding.btnSmsContactReview.setOnClickListener {
+            val contacts = viewModel.emergencyContacts.value
+            val message = viewModel.buildFormattedSummary()
+            if (contacts.isEmpty()) {
+                Toast.makeText(
+                    requireContext(),
+                    "No saved contacts yet. Opening Messages.",
+                    Toast.LENGTH_SHORT
+                ).show()
+                val res = CommunicationHelper.openSmsApp(requireContext(), "", message)
+                if (res is CommunicationHelper.ActionResult.Error) {
+                    Toast.makeText(requireContext(), res.message, Toast.LENGTH_LONG).show()
+                }
+            } else {
+                val labels = contacts.map { "${it.name} • ${it.phoneNumber}" }.toTypedArray()
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Send Text to Someone Else")
+                    .setItems(labels) { _, which ->
+                        val selected = contacts[which]
+                        val res = CommunicationHelper.openSmsApp(requireContext(), selected.phoneNumber, message)
+                        if (res is CommunicationHelper.ActionResult.Error) {
+                            Toast.makeText(requireContext(), res.message, Toast.LENGTH_LONG).show()
+                        }
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
             }
         }
 
@@ -124,17 +152,13 @@ class ReviewAndShareFragment : Fragment() {
                 }
                 launch {
                     viewModel.appSettings.collect { settings ->
+                        binding.btnSmsMdrrmoReview.text = "Send Text to MDRRMO (${settings.mdrrmoHotline})"
                         binding.btnCallMdrrmoReview.text = "Call MDRRMO (${settings.mdrrmoHotline})"
                     }
                 }
                 launch {
-                    viewModel.emergencyContacts.collect { contacts ->
-                        val target = contacts.firstOrNull { it.isPrimary } ?: contacts.firstOrNull()
-                        binding.btnSmsContactReview.text = if (target != null) {
-                            "Send SMS to ${target.name}"
-                        } else {
-                            "Send SMS to Contact"
-                        }
+                    viewModel.emergencyContacts.collect {
+                        binding.btnSmsContactReview.text = "Send Text to Someone Else"
                     }
                 }
             }

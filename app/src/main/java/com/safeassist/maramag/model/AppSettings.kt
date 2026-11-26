@@ -3,6 +3,7 @@ package com.safeassist.maramag.model
 data class AppSettings(
     val hasCompletedSetup: Boolean = false,
     val hasRequestedInitialPermissions: Boolean = false,
+    val sosCountdownSeconds: Int = 5,
     val sirenEnabled: Boolean = false,
     val sirenUserOverridden: Boolean = false,
     val askGpsBeforeSending: Boolean = true,

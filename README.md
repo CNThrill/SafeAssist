@@ -1,4 +1,4 @@
-# SafeAssist — Accessible Emergency Assistance Guide
+# SafeAssist — Accessible Emergency Assistance App
 
 **Project Title:** Investigating Emergency Triage and Response Accessibility for Vulnerable Communities in Maramag  
 **Authors:** Marc Randolph Arpon, Ted Emmanuel Balaba, Rovic James Duron, Jose Gilberto Sadicon (Central Mindanao University — HCI Term Project)  
@@ -6,99 +6,62 @@
 
 ---
 
-## 1. Background & Design Rationale
+## Overview
 
-SafeAssist is an offline-first native Android application (Kotlin, XML, Material 3) built directly from our **HCI Discover & Design Phase Reports**. Our field interviews with Maramag residents, caregivers, an RCY volunteer, and MDRRMO personnel identified four core bottlenecks (`F1`–`F4`):
+SafeAssist is an offline-first Android application (Kotlin, XML, Material 3) designed to help vulnerable residents and caregivers in **Maramag, Bukidnon** prepare and send clear emergency alerts quickly under stress or weak connectivity.
 
-1. **Vague locations and missing street names (`F1`):** Panicked callers struggle to describe where they are, forcing dispatchers into repeated callbacks. We structured location around **Barangay, Purok, Street/House Description, and Nearest Landmark**, paired with optional **plain-text GPS coordinates** (instead of map links that require mobile data).
-2. **Communication and disclosure friction (`F2`):** Residents with mobility needs or mental health conditions reported difficulty explaining safe handling under pressure or reluctance to disclose diagnoses over voice calls. SafeAssist lets users pre-save mobility/assistance notes once and choose **text-first SMS/Messenger handoffs** without forcing medical diagnoses.
-3. **Fragmented, low-signal connectivity (`F3`):** Rural barangays often experience weak cellular voice/SMS signal, and residents may need to fall back to Wi-Fi and Facebook Messenger to reach MDRRMO Maramag. SafeAssist keeps all profiles, contacts, settings, and message templates offline on-device so users can prepare alerts anytime and copy them for SMS or Messenger.
-4. **Informal caregiver/family buffer (`F4`):** Residents often rely on family, neighbors, or BHWs before reaching MDRRMO. SafeAssist supports **Helping: Someone Else** proxy reporting and keeps **Trusted Contacts** one tap away.
+All personal details, emergency contacts, and message templates are stored strictly on-device so users can prepare alerts offline and hand them off to their phone's SMS, dialer, or Messenger apps.
 
 ---
 
-## 2. Implemented Features
+## Key Features
 
-### First-Time Setup & My Info (`SetupFragment`, `ProfileFragment`)
-- Collects full name, **callback phone number**, Barangay, Purok, street/house description, nearest landmark, assistance/mobility profile, and optional handling notes locally on the device.
-- Automatically pre-fills SOS messages and self-reported incident drafts so users do not have to type under stress.
+### First-Time Setup & My Info
+- Saves the user's full name, callback phone number, **Maramag Barangay** and matching **Purok** dropdown selection, street/house description, nearest landmark, mobility/assistance profile, and optional handling notes locally on the device.
+- Automatically pre-fills SOS messages and emergency reports so users do not need to type during an emergency.
 
-### Primary Path: One-Tap SOS (`SosReadyToSendFragment`)
-- **Immediate SOS access:** Tapping the SOS button on Home goes directly to the Ready-to-Send screen with no intermediate countdown — the siren (if enabled) and GPS location fetch start the moment the screen opens so there is no delay between intent and action.
-- **Siren on trigger:** Optional alarm-stream siren (`AudioAttributes.USAGE_ALARM`) starts immediately when SOS is opened (if enabled in Settings), with an immediate **Stop Siren** control on the same screen (`D10`).
-- **GPS + fallback:** Reads offline GPS/Network/Fused coordinates via Android `LocationManager` using a 15-second live-fix scan window (instead of the previous 6-second window, giving pure satellite GPS enough time to lock in areas without Wi-Fi or mobile data) and a 15-minute cache freshness limit. Includes an opt-in **Included / Excluded** toggle chip; falls back to the saved Barangay/Purok/landmark when GPS is unavailable or disabled (`D9`).
-- **Manual handoff actions:** Displays a prominent **Not Sent Yet** banner and lets the user tap **Send Text to MDRRMO**, **Call MDRRMO**, **Send Text to [Trusted Contact]**, or **Copy My Message**.
+### Two Modes on Home: Helping Myself vs. Helping Someone Else
+- **Helping: Myself:** Tapping **SOS** starts an optional configurable countdown (**No countdown**, **3 sec**, or **5 sec** in Settings), plays the optional alarm siren (persisting with an ongoing notification and **Stop Siren** button), and opens the Messages app with all saved trusted contacts and the MDRRMO hotline pre-selected alongside the formatted SOS message and optional GPS coordinates.
+- **Helping: Someone Else:** Tapping **SOS** opens the **Ready to Send** screen directly with the siren off by default (and toggleable on-screen), preventing the caregiver's personal home address or mobility notes from being included in someone else's emergency alert.
 
-### Secondary Path: Report What Happened (`WhereAndNeedsFragment` -> `ReviewAndShareFragment`)
-- Guided 2-step **4 W's** preparation flow:
-  - **Step 1 (`What Happened`):** `Who needs help?` (`Me` / `Family` / `Someone else`), `Where` (with a **Not sure** skip button), `What happened?` radio choices, multi-select `Assistance needs` chips, and `More details` (120-character cap).
-  - **Step 2 (`Review & Send`):** Shows the compiled report with an editable **When** timestamp, a **Change / Edit** path back to Step 1, and **Copy My Message**, **Send SMS to [Trusted Contact]**, and **Call MDRRMO** actions.
+### Report What Happened (Guided 4 W's Flow)
+- **Step 1 — What Happened:** Select who needs help (`Me`, `Family`, or `Someone else`), where the emergency is (with Maramag Barangay & Purok dropdowns or a **Not sure** shortcut), what happened (`Medical`, `Flood`, `Fire`, `Landslide`, `Other`), needed assistance chips, and optional extra details.
+- **Step 2 — Review & Send:** Review the compiled report, adjust the timestamp if needed, copy the message for Messenger, **Send Text to MDRRMO**, **Send Text to Someone Else** (choosing from saved contacts), or **Call MDRRMO**.
 
-### Caregiver Mode & Emergency Contacts (`HomeFragment`, `EmergencyContactsFragment`)
-- **Helping: Myself / Helping: Someone Else** switch on Home prevents SOS from leaking the caregiver's own saved home address or personal mobility notes when requesting help for another person while keeping the phone's callback number.
-- **Contacts tab:** Displays the editable MDRRMO hotline (`0966-768-2770` by default), provides a 1-tap **Copy Message for Messenger** relay button, and manages locally saved **Trusted Contacts**.
+### Emergency Contacts & Quick Call
+- Displays and allows editing the local MDRRMO hotline (`0966-768-2770` by default) and copying a ready-to-paste summary for Messenger.
+- Lets users add, validate, remove, **Pin**, and **Unpin** trusted contacts. The **Quick Call Trusted** card on Home displays and dials the pinned contact (or the first saved contact if none is pinned).
 
-### Core Safety & Privacy Guardrails
-- **Never auto-sends or auto-calls:** We intentionally omit `SEND_SMS`, `CALL_PHONE`, and `INTERNET` permissions. All calls and texts open through `ACTION_DIAL` and `ACTION_SENDTO` (`smsto:`) so the user always sees and confirms delivery in their system dialer or SMS app (`D7`).
-- **Local-only storage:** Room and DataStore Preferences store everything strictly on the device (`android:allowBackup="false"`).
+### Offline GPS & Privacy Guardrails
+- **Manual handoff only:** SafeAssist does not auto-send SMS or auto-place calls (`SEND_SMS`, `CALL_PHONE`, and `INTERNET` permissions are not requested). All texts and calls open in the system Messages or Phone app for user confirmation.
+- **Offline GPS with address fallback:** Reads device GPS coordinates with a one-tap Location Settings prompt when device Location is off, and falls back to the saved Barangay, Purok, and landmark when GPS is unavailable.
+- **Local-only storage:** Profiles, contacts, and settings are stored locally using Room and DataStore Preferences (`android:allowBackup="false"`).
 
 ---
 
-## 3. Refinements Between Design Wireframes & Current Prototype
+## Architecture
 
-As we translated our Design Phase wireframes into a testable Android prototype, we made a few focused simplifications to reduce clutter and panic-time friction:
-
-- **Removed Home summary cards, status badges, and external URL launchers:** We stripped non-interactive badges (`Offline ready`, `Saved only on this device`, `Awaiting verification`) and kept Home unscrollable (wrapped in a `fillViewport` scroll container only as an overflow safeguard for small screens or large system font sizes).
-- **Removed SOS countdown screen:** Our early wireframes included a configurable 3s/5s/10s countdown (`D8`) to prevent accidental SOS triggers. Field feedback during prototype testing indicated the intermediate screen added friction when users needed help immediately, so we removed the countdown and routed the SOS button directly to the Ready-to-Send screen. The siren and GPS fetch now start immediately when Ready-to-Send opens; the **Not Sent Yet** banner remains as the deliberate handoff boundary before any message is actually sent.
-- **Direct action buttons on Ready-to-Send:** We show **Send Text to MDRRMO**, **Call MDRRMO**, and **Copy My Message** directly on the Ready-to-Send screen so users can pick their channel immediately while the `"Not Sent Yet"` boundary stays visible.
-- **Manual Barangay & Purok entry:** We kept Barangay and Purok as plain text inputs rather than hardcoded dropdown lists so we do not ship unverified municipal/purok records.
+- **Pattern:** MVVM with Kotlin Coroutines and `StateFlow`
+- **Persistence:** Room Database (`SafeAssistDatabase`) and DataStore Preferences (`SettingsDataStore`)
+- **Navigation:** Android Navigation Component (`nav_graph.xml`)
+- **Packages:** `audio`, `communication`, `data`, `database`, `location`, `model`, `navigation`, `repository`, `ui`, `utils`, `viewmodel`
 
 ---
 
-## 4. Architecture & Package Structure
+## Permissions Used
 
-We structured the app with **MVVM**, **Kotlin Coroutines & StateFlow**, **Room**, **DataStore Preferences**, and **Android Navigation Component**:
-
-```text
-com.safeassist.maramag
-├── audio/           # SirenManager (MediaPlayer with USAGE_ALARM on res/raw/emergency_siren.wav)
-├── communication/   # CommunicationHelper (ACTION_SENDTO, ACTION_DIAL, ClipboardManager)
-├── data/            # SettingsDataStore (DataStore Preferences for setup, timer, siren, GPS, caregiver, hotline)
-├── database/        # SafeAssistDatabase, UserProfileDao, EmergencyContactDao, SafeAssistConverters
-├── location/        # LocationProvider (LocationManager offline provider racing + 15-min stale-fix guard)
-├── model/           # UserProfile, EmergencyContact, EmergencyReport, AppSettings, LocationResult, Enums
-├── navigation/      # SafeAssistNavigator (navigation actions & SOS backstack reset)
-├── repository/      # SafeAssistRepository (combines Room + DataStore flows)
-├── ui/
-│   ├── MainActivity.kt
-│   ├── setup/       # SetupFragment
-│   ├── home/        # HomeFragment
-│   ├── contacts/    # EmergencyContactsFragment
-│   ├── profile/     # ProfileFragment
-│   ├── settings/    # SettingsFragment
-│   ├── prepare/     # WhereAndNeedsFragment, ReviewAndShareFragment
-│   └── sos/         # SosReadyToSendFragment
-├── utils/           # EmergencyMessageFormatter, DateTimeUtils
-└── viewmodel/       # HomeViewModel, ProfileViewModel, ContactsViewModel, SettingsViewModel,
-                     # PrepareEmergencyViewModel, SosViewModel, SetupViewModel, SafeAssistViewModelFactory
-```
+- `ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION`: Used optionally to include plain-text GPS coordinates in SOS messages.
+- `FOREGROUND_SERVICE` / `FOREGROUND_SERVICE_MEDIA_PLAYBACK` / `POST_NOTIFICATIONS`: Used to keep the optional emergency siren active with an ongoing **Stop Siren** notification control when switching to Messages.
 
 ---
 
-## 5. Permissions Used
-
-- `ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION`: Requested once on initial launch (and again on SOS Ready-to-Send if GPS is enabled and permission was not yet granted). Works offline via `LocationManager`; if denied or indoors, the app falls back to the saved address.
-- **Intentionally omitted:** `SEND_SMS`, `CALL_PHONE`, and `INTERNET`.
-
----
-
-## 6. Building the APK & Running Unit Tests
+## Building & Testing
 
 ### Prerequisites
 - Android Studio (Ladybug or newer) or JDK 17+
 - Android SDK Platform 34 (`compileSdk = 34`, `minSdk = 24`, `targetSdk = 34`)
 
-### Command Line Build & Test
+### Command Line
 From the `app/` project root:
 
 ```powershell
@@ -107,18 +70,3 @@ From the `app/` project root:
 
 Debug APK output:
 `app/build/outputs/apk/debug/app-debug.apk`
-
-Install onto a device or emulator via ADB:
-
-```powershell
-adb install -r app\build\outputs\apk\debug\app-debug.apk
-```
-
----
-
-## 7. Known Limitations & Pending Validation
-
-- **No automatic dispatch or delivery tracking:** SafeAssist prepares messages and dialer handoffs only; actual transmission still requires cellular or data signal (or showing the screen to a neighbor/BHW when signal is out).
-- **Hotline verification pending:** `0966-768-2770` is taken from the Sept 29, 2026 MDRRMO Maramag Facebook post (`EV-06`) and still requires direct confirmation with MDRRMO; users can update it in **Contacts**.
-- **Pending field usability testing:** Features introduced during the design phase — such as the plain-text GPS preview and alarm siren — still need field usability testing with Maramag PWDs, seniors, caregivers, and responders.
-- **Hardware volume bounds:** Android does not allow apps to override a hardware-muted alarm channel; the siren plays at the device's permitted alarm volume.

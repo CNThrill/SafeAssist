@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -14,6 +15,7 @@ import com.safeassist.maramag.R
 import com.safeassist.maramag.SafeAssistApplication
 import com.safeassist.maramag.databinding.FragmentProfileBinding
 import com.safeassist.maramag.model.MobilityProfile
+import com.safeassist.maramag.utils.MaramagAddressData
 import com.safeassist.maramag.viewmodel.ProfileViewModel
 import com.safeassist.maramag.viewmodel.SafeAssistViewModelFactory
 import kotlinx.coroutines.flow.filterNotNull
@@ -42,6 +44,36 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val barangayAdapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_dropdown_item_1line,
+            MaramagAddressData.BARANGAYS
+        )
+        binding.etBarangay.setAdapter(barangayAdapter)
+
+        fun updatePurokDropdown(barangay: String, clearIfOutOfRange: Boolean) {
+            val puroks = MaramagAddressData.puroksForBarangay(barangay)
+            binding.etPurok.setAdapter(
+                ArrayAdapter(
+                    requireContext(),
+                    android.R.layout.simple_dropdown_item_1line,
+                    puroks
+                )
+            )
+            if (clearIfOutOfRange) {
+                val currentPurok = binding.etPurok.text?.toString()?.trim().orEmpty()
+                if (currentPurok.isNotEmpty() && currentPurok !in puroks) {
+                    binding.etPurok.setText("", false)
+                }
+            }
+        }
+
+        updatePurokDropdown("", clearIfOutOfRange = false)
+        binding.etBarangay.setOnItemClickListener { _, _, position, _ ->
+            val selected = barangayAdapter.getItem(position).orEmpty()
+            updatePurokDropdown(selected, clearIfOutOfRange = true)
+        }
+
         // Populate once after Room emits the real profile so returning from background doesn't wipe edits
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -50,8 +82,9 @@ class ProfileFragment : Fragment() {
                         hasPopulatedFields = true
                         binding.etFullName.setText(profile.fullName)
                         binding.etContactNumber.setText(profile.contactNumber)
-                        binding.etBarangay.setText(profile.barangay)
-                        binding.etPurok.setText(profile.purok)
+                        binding.etBarangay.setText(profile.barangay, false)
+                        updatePurokDropdown(profile.barangay, clearIfOutOfRange = false)
+                        binding.etPurok.setText(profile.purok, false)
                         binding.etStreetHousehold.setText(profile.streetOrHousehold)
                         binding.etLandmark.setText(profile.landmark)
                         binding.etAssistanceNotes.setText(profile.assistanceNotes)

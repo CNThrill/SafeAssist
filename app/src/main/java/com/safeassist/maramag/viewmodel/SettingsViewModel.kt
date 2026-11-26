@@ -23,6 +23,12 @@ class SettingsViewModel(
 
     val isSirenPlaying: StateFlow<Boolean> = sirenManager.isPlaying
 
+    fun setSosCountdownSeconds(seconds: Int) {
+        viewModelScope.launch {
+            repository.setSosCountdownSeconds(seconds)
+        }
+    }
+
     fun setSirenEnabled(enabled: Boolean) {
         viewModelScope.launch {
             repository.setSirenEnabled(enabled)

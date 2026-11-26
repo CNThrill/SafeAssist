@@ -6,6 +6,7 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -19,6 +20,7 @@ import com.safeassist.maramag.model.AssistanceNeed
 import com.safeassist.maramag.model.IncidentType
 import com.safeassist.maramag.model.WhoNeedsHelp
 import com.safeassist.maramag.navigation.SafeAssistNavigator
+import com.safeassist.maramag.utils.MaramagAddressData
 import com.safeassist.maramag.viewmodel.PrepareEmergencyViewModel
 import com.safeassist.maramag.viewmodel.SafeAssistViewModelFactory
 import kotlinx.coroutines.launch
@@ -49,6 +51,36 @@ class WhereAndNeedsFragment : Fragment() {
 
         viewModel.startNewOrResume()
 
+        val barangayAdapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_dropdown_item_1line,
+            MaramagAddressData.BARANGAYS
+        )
+        binding.etReportBarangay.setAdapter(barangayAdapter)
+
+        fun updateReportPurokDropdown(barangay: String, clearIfOutOfRange: Boolean) {
+            val puroks = MaramagAddressData.puroksForBarangay(barangay)
+            binding.etReportPurok.setAdapter(
+                ArrayAdapter(
+                    requireContext(),
+                    android.R.layout.simple_dropdown_item_1line,
+                    puroks
+                )
+            )
+            if (clearIfOutOfRange) {
+                val currentPurok = binding.etReportPurok.text?.toString()?.trim().orEmpty()
+                if (currentPurok.isNotEmpty() && currentPurok !in puroks) {
+                    binding.etReportPurok.setText("", false)
+                }
+            }
+        }
+
+        updateReportPurokDropdown("", clearIfOutOfRange = false)
+        binding.etReportBarangay.setOnItemClickListener { _, _, position, _ ->
+            val selected = barangayAdapter.getItem(position).orEmpty()
+            updateReportPurokDropdown(selected, clearIfOutOfRange = true)
+        }
+
         binding.btnBackHome.setOnClickListener {
             saveTextFieldsToDraft()
             findNavController().popBackStack()
@@ -56,7 +88,7 @@ class WhereAndNeedsFragment : Fragment() {
 
         binding.btnLocationNotSure.setOnClickListener {
             if (binding.etReportBarangay.text.isNullOrBlank()) {
-                binding.etReportBarangay.setText("Unknown")
+                binding.etReportBarangay.setText("Unknown", false)
             }
             if (binding.etReportLandmark.text.isNullOrBlank()) {
                 binding.etReportLandmark.setText("Unknown")
@@ -131,8 +163,9 @@ class WhereAndNeedsFragment : Fragment() {
                             val draft = viewModel.draft.value
                             isPopulating = true
                             binding.etPersonName.setText(draft.personName)
-                            binding.etReportBarangay.setText(draft.barangay)
-                            binding.etReportPurok.setText(draft.purok)
+                            binding.etReportBarangay.setText(draft.barangay, false)
+                            updateReportPurokDropdown(draft.barangay, clearIfOutOfRange = false)
+                            binding.etReportPurok.setText(draft.purok, false)
                             binding.etReportStreet.setText(draft.street)
                             binding.etReportLandmark.setText(draft.landmark)
                             binding.etReportHousehold.setText(draft.householdDescription)

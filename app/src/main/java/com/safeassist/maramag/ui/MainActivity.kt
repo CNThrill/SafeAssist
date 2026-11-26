@@ -1,10 +1,13 @@
 package com.safeassist.maramag.ui
 
 import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
@@ -43,18 +46,28 @@ class MainActivity : AppCompatActivity() {
             )
             navController.graph = navGraph
 
-            if (!initialSettings.hasRequestedInitialPermissions &&
+            val needsNotifications = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+                PackageManager.PERMISSION_GRANTED
+            val needsInitialLocation = !initialSettings.hasRequestedInitialPermissions &&
                 !app.locationProvider.hasLocationPermission()
-            ) {
-                lifecycleScope.launch {
-                    app.repository.setHasRequestedInitialPermissions(true)
+
+            if (needsInitialLocation || needsNotifications) {
+                if (needsInitialLocation) {
+                    lifecycleScope.launch {
+                        app.repository.setHasRequestedInitialPermissions(true)
+                    }
                 }
-                initialLocationPermissionLauncher.launch(
-                    arrayOf(
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                    )
-                )
+                val permissions = buildList {
+                    if (needsInitialLocation) {
+                        add(Manifest.permission.ACCESS_FINE_LOCATION)
+                        add(Manifest.permission.ACCESS_COARSE_LOCATION)
+                    }
+                    if (needsNotifications) {
+                        add(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                }.toTypedArray()
+                initialLocationPermissionLauncher.launch(permissions)
             }
         }
 
@@ -76,10 +89,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onStop() {
-        super.onStop()
-        // Stop any active siren when the app goes into the background unless user explicitly returned
-        // Keeping lifecycle clean prevents stuck audio if the app is backgrounded/interrupted
+    override fun onDestroy() {
+        super.onDestroy()
         if (!isChangingConfigurations) {
             (application as SafeAssistApplication).sirenManager.stopSiren()
         }

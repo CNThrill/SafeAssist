@@ -40,6 +40,17 @@ class SettingsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.chipGroupCountdown.setOnCheckedStateChangeListener { _, checkedIds ->
+            if (!ignoreListeners) {
+                val seconds = when (checkedIds.firstOrNull()) {
+                    R.id.chip_countdown_0 -> 0
+                    R.id.chip_countdown_3 -> 3
+                    else -> 5
+                }
+                viewModel.setSosCountdownSeconds(seconds)
+            }
+        }
+
         binding.switchSirenEnabled.setOnCheckedChangeListener { _, isChecked ->
             if (!ignoreListeners) {
                 viewModel.setSirenEnabled(isChecked)
@@ -68,6 +79,12 @@ class SettingsFragment : Fragment() {
                 launch {
                     viewModel.appSettings.collect { settings ->
                         ignoreListeners = true
+                        val countdownChipId = when (settings.sosCountdownSeconds) {
+                            0 -> R.id.chip_countdown_0
+                            3 -> R.id.chip_countdown_3
+                            else -> R.id.chip_countdown_5
+                        }
+                        binding.chipGroupCountdown.check(countdownChipId)
                         binding.switchSirenEnabled.isChecked = settings.sirenEnabled
                         binding.switchGpsPreview.isChecked = settings.askGpsBeforeSending
                         ignoreListeners = false
