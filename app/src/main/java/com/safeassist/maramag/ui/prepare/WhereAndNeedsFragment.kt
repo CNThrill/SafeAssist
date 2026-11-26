@@ -58,7 +58,7 @@ class WhereAndNeedsFragment : Fragment() {
         )
         binding.etReportBarangay.setAdapter(barangayAdapter)
 
-        fun updateReportPurokDropdown(barangay: String, clearIfOutOfRange: Boolean) {
+        fun updateReportPurokDropdown(barangay: String) {
             val puroks = MaramagAddressData.puroksForBarangay(barangay)
             binding.etReportPurok.setAdapter(
                 ArrayAdapter(
@@ -67,18 +67,12 @@ class WhereAndNeedsFragment : Fragment() {
                     puroks
                 )
             )
-            if (clearIfOutOfRange) {
-                val currentPurok = binding.etReportPurok.text?.toString()?.trim().orEmpty()
-                if (currentPurok.isNotEmpty() && currentPurok !in puroks) {
-                    binding.etReportPurok.setText("", false)
-                }
-            }
         }
 
-        updateReportPurokDropdown("", clearIfOutOfRange = false)
+        updateReportPurokDropdown("")
         binding.etReportBarangay.setOnItemClickListener { _, _, position, _ ->
             val selected = barangayAdapter.getItem(position).orEmpty()
-            updateReportPurokDropdown(selected, clearIfOutOfRange = true)
+            updateReportPurokDropdown(selected)
         }
 
         binding.btnBackHome.setOnClickListener {
@@ -164,7 +158,7 @@ class WhereAndNeedsFragment : Fragment() {
                             isPopulating = true
                             binding.etPersonName.setText(draft.personName)
                             binding.etReportBarangay.setText(draft.barangay, false)
-                            updateReportPurokDropdown(draft.barangay, clearIfOutOfRange = false)
+                            updateReportPurokDropdown(draft.barangay)
                             binding.etReportPurok.setText(draft.purok, false)
                             binding.etReportStreet.setText(draft.street)
                             binding.etReportLandmark.setText(draft.landmark)

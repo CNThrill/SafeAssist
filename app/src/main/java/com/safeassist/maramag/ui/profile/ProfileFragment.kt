@@ -51,7 +51,7 @@ class ProfileFragment : Fragment() {
         )
         binding.etBarangay.setAdapter(barangayAdapter)
 
-        fun updatePurokDropdown(barangay: String, clearIfOutOfRange: Boolean) {
+        fun updatePurokDropdown(barangay: String) {
             val puroks = MaramagAddressData.puroksForBarangay(barangay)
             binding.etPurok.setAdapter(
                 ArrayAdapter(
@@ -60,18 +60,12 @@ class ProfileFragment : Fragment() {
                     puroks
                 )
             )
-            if (clearIfOutOfRange) {
-                val currentPurok = binding.etPurok.text?.toString()?.trim().orEmpty()
-                if (currentPurok.isNotEmpty() && currentPurok !in puroks) {
-                    binding.etPurok.setText("", false)
-                }
-            }
         }
 
-        updatePurokDropdown("", clearIfOutOfRange = false)
+        updatePurokDropdown("")
         binding.etBarangay.setOnItemClickListener { _, _, position, _ ->
             val selected = barangayAdapter.getItem(position).orEmpty()
-            updatePurokDropdown(selected, clearIfOutOfRange = true)
+            updatePurokDropdown(selected)
         }
 
         // Populate once after Room emits the real profile so returning from background doesn't wipe edits
@@ -83,7 +77,7 @@ class ProfileFragment : Fragment() {
                         binding.etFullName.setText(profile.fullName)
                         binding.etContactNumber.setText(profile.contactNumber)
                         binding.etBarangay.setText(profile.barangay, false)
-                        updatePurokDropdown(profile.barangay, clearIfOutOfRange = false)
+                        updatePurokDropdown(profile.barangay)
                         binding.etPurok.setText(profile.purok, false)
                         binding.etStreetHousehold.setText(profile.streetOrHousehold)
                         binding.etLandmark.setText(profile.landmark)

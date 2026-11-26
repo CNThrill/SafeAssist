@@ -4,11 +4,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.safeassist.maramag.R
 import com.safeassist.maramag.SafeAssistApplication
+import com.safeassist.maramag.utils.MaramagAddressData
 import com.safeassist.maramag.databinding.FragmentSetupBinding
 import com.safeassist.maramag.model.MobilityProfile
 import com.safeassist.maramag.viewmodel.SafeAssistViewModelFactory
@@ -34,6 +36,30 @@ class SetupFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        val barangayAdapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_dropdown_item_1line,
+            MaramagAddressData.BARANGAYS
+        )
+        binding.etSetupBarangay.setAdapter(barangayAdapter)
+
+        fun updatePurokDropdown(barangay: String) {
+            val puroks = MaramagAddressData.puroksForBarangay(barangay)
+            binding.etSetupPurok.setAdapter(
+                ArrayAdapter(
+                    requireContext(),
+                    android.R.layout.simple_dropdown_item_1line,
+                    puroks
+                )
+            )
+        }
+
+        updatePurokDropdown("")
+        binding.etSetupBarangay.setOnItemClickListener { _, _, position, _ ->
+            val selected = barangayAdapter.getItem(position).orEmpty()
+            updatePurokDropdown(selected)
+        }
 
         binding.btnCompleteSetup.setOnClickListener {
             val mobility = when (binding.rgSetupMobility.checkedRadioButtonId) {
