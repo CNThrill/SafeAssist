@@ -16,7 +16,10 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.safeassist.maramag.SafeAssistApplication
 import com.safeassist.maramag.communication.CommunicationHelper
+import com.safeassist.maramag.databinding.DialogPickContactSmsBinding
 import com.safeassist.maramag.databinding.FragmentReviewAndShareBinding
+import com.safeassist.maramag.databinding.ItemPickContactSmsBinding
+import com.safeassist.maramag.model.EmergencyContact
 import com.safeassist.maramag.model.WhoNeedsHelp
 import com.safeassist.maramag.utils.DateTimeUtils
 import com.safeassist.maramag.viewmodel.PrepareEmergencyViewModel
@@ -94,18 +97,7 @@ class ReviewAndShareFragment : Fragment() {
                     Toast.makeText(requireContext(), res.message, Toast.LENGTH_LONG).show()
                 }
             } else {
-                val labels = contacts.map { "${it.name} • ${it.phoneNumber}" }.toTypedArray()
-                AlertDialog.Builder(requireContext())
-                    .setTitle("Send Text to Someone Else")
-                    .setItems(labels) { _, which ->
-                        val selected = contacts[which]
-                        val res = CommunicationHelper.openSmsApp(requireContext(), selected.phoneNumber, message)
-                        if (res is CommunicationHelper.ActionResult.Error) {
-                            Toast.makeText(requireContext(), res.message, Toast.LENGTH_LONG).show()
-                        }
-                    }
-                    .setNegativeButton("Cancel", null)
-                    .show()
+                showPickContactSmsDialog(contacts, message)
             }
         }
 
@@ -163,6 +155,38 @@ class ReviewAndShareFragment : Fragment() {
                 }
             }
         }
+    }
+
+    private fun showPickContactSmsDialog(contacts: List<EmergencyContact>, message: String) {
+        val dialogBinding = DialogPickContactSmsBinding.inflate(layoutInflater)
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogBinding.root)
+            .setNegativeButton("Cancel", null)
+            .create()
+
+        contacts.forEach { contact ->
+            val itemBinding = ItemPickContactSmsBinding.inflate(
+                layoutInflater,
+                dialogBinding.containerContactOptions,
+                false
+            )
+            itemBinding.tvPickContactName.text = contact.name
+            itemBinding.tvPickContactMeta.text = if (contact.relationshipOrRole.isNotBlank()) {
+                "${contact.relationshipOrRole} • ${contact.phoneNumber}"
+            } else {
+                contact.phoneNumber
+            }
+            itemBinding.root.setOnClickListener {
+                dialog.dismiss()
+                val res = CommunicationHelper.openSmsApp(requireContext(), contact.phoneNumber, message)
+                if (res is CommunicationHelper.ActionResult.Error) {
+                    Toast.makeText(requireContext(), res.message, Toast.LENGTH_LONG).show()
+                }
+            }
+            dialogBinding.containerContactOptions.addView(itemBinding.root)
+        }
+
+        dialog.show()
     }
 
     private fun renderWhoSummary(whoNeedsHelp: WhoNeedsHelp, personName: String, profileFullName: String) {
