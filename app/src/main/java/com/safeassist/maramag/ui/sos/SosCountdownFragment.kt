@@ -86,11 +86,8 @@ class SosCountdownFragment : Fragment() {
                             binding.tvCountdownSubtitle.text = "ready"
                             binding.btnCancelSos.text = "Back to Home"
                             val contacts = viewModel.emergencyContacts.value
-                            val recipients = if (contacts.isNotEmpty()) {
-                                contacts.map { it.phoneNumber }
-                            } else {
-                                listOf(viewModel.appSettings.value.mdrrmoHotline)
-                            }
+                            val recipients = contacts.map { it.phoneNumber } +
+                                viewModel.appSettings.value.mdrrmoHotline
                             val message = viewModel.buildSosMessage()
                             val res = CommunicationHelper.openSmsApp(requireContext(), recipients, message)
                             if (res is CommunicationHelper.ActionResult.Error) {

@@ -73,7 +73,6 @@ class SosViewModel(
 
         countdownJob = viewModelScope.launch {
             val settings = repository.appSettings.first()
-            if (settings.sirenEnabled) sirenManager.startSiren()
             if (settings.askGpsBeforeSending && locationProvider.hasLocationPermission()) {
                 fetchLocationIfPermitted()
             }
@@ -82,6 +81,7 @@ class SosViewModel(
                 delay(1000L)
             }
             _secondsRemaining.value = 0
+            if (settings.sirenEnabled) sirenManager.startSiren()
             _countdownFinished.value = true
         }
     }
