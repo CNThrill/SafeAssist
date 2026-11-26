@@ -56,7 +56,11 @@ class HomeFragment : Fragment() {
         }
 
         binding.btnSos.setOnClickListener {
-            SafeAssistNavigator.navigateToSos(findNavController())
+            if (viewModel.appSettings.value.caregiverModeEnabled) {
+                SafeAssistNavigator.navigateToSosReadyToSend(findNavController())
+            } else {
+                SafeAssistNavigator.navigateToSosCountdown(findNavController())
+            }
         }
 
         binding.btnPrepareDetails.setOnClickListener {

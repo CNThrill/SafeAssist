@@ -101,17 +101,16 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Siren Ringing Strip (shown only after countdown triggers siren) -->
+            <!-- Alarm Siren Toggle Strip -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/card_siren_ringing"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:visibility="gone"
-                app:cardBackgroundColor="@color/amber_bg"
+                app:cardBackgroundColor="@color/surface_white"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="0dp"
-                app:strokeColor="@color/amber_border"
+                app:strokeColor="@color/divider_light"
                 app:strokeWidth="1.5dp">
 
                 <LinearLayout
@@ -122,11 +121,12 @@
                     android:padding="12dp">
 
                     <TextView
+                        android:id="@+id/tv_siren_status"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Siren is ringing"
-                        android:textColor="@color/amber_text"
+                        android:text="Alarm Siren: Off"
+                        android:textColor="@color/text_primary"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
@@ -134,9 +134,9 @@
                         android:id="@+id/btn_stop_siren_ready"
                         android:layout_width="wrap_content"
                         android:layout_height="48dp"
-                        android:text="@string/stop_siren"
+                        android:text="Turn On Siren"
                         android:textStyle="bold"
-                        app:backgroundTint="@color/amber_dark"
+                        app:backgroundTint="@color/primary_blue"
                         app:cornerRadius="10dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -42,6 +43,22 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val barangays = resources.getStringArray(R.array.maramag_barangays)
+        val barangayAdapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_dropdown_item_1line,
+            barangays
+        )
+        binding.etBarangay.setAdapter(barangayAdapter)
+
+        val puroks = resources.getStringArray(R.array.maramag_puroks)
+        val purokAdapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_dropdown_item_1line,
+            puroks
+        )
+        binding.etPurok.setAdapter(purokAdapter)
+
         // Populate once after Room emits the real profile so returning from background doesn't wipe edits
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -50,8 +67,8 @@ class ProfileFragment : Fragment() {
                         hasPopulatedFields = true
                         binding.etFullName.setText(profile.fullName)
                         binding.etContactNumber.setText(profile.contactNumber)
-                        binding.etBarangay.setText(profile.barangay)
-                        binding.etPurok.setText(profile.purok)
+                        binding.etBarangay.setText(profile.barangay, false)
+                        binding.etPurok.setText(profile.purok, false)
                         binding.etStreetHousehold.setText(profile.streetOrHousehold)
                         binding.etLandmark.setText(profile.landmark)
                         binding.etAssistanceNotes.setText(profile.assistanceNotes)

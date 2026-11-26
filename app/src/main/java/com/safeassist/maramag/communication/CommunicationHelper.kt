@@ -46,9 +46,13 @@ object CommunicationHelper {
     }
 
     fun openSmsApp(context: Context, phoneNumber: String, messageBody: String): ActionResult {
-        val cleaned = phoneNumber.trim()
-        val uri = if (cleaned.isNotBlank()) {
-            Uri.parse("smsto:${Uri.encode(cleaned)}")
+        return openSmsApp(context, listOf(phoneNumber), messageBody)
+    }
+
+    fun openSmsApp(context: Context, phoneNumbers: List<String>, messageBody: String): ActionResult {
+        val cleaned = phoneNumbers.map { it.trim() }.filter { it.isNotBlank() }.distinct()
+        val uri = if (cleaned.isNotEmpty()) {
+            Uri.parse("smsto:${cleaned.joinToString(";") { Uri.encode(it) }}")
         } else {
             Uri.parse("smsto:")
         }

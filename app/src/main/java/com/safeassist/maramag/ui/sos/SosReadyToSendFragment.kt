@@ -3,6 +3,8 @@ package com.safeassist.maramag.ui.sos
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.content.res.ColorStateList
+import androidx.core.content.ContextCompat
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
@@ -52,6 +54,7 @@ class SosReadyToSendFragment : Fragment() {
         if (result.resultCode == Activity.RESULT_OK) {
             viewModel.fetchLocationIfPermitted()
         } else {
+            viewModel.markDeviceLocationOff()
             Toast.makeText(
                 requireContext(),
                 "Location is still off. Using saved address.",
@@ -157,7 +160,7 @@ class SosReadyToSendFragment : Fragment() {
         }
 
         binding.btnStopSirenReady.setOnClickListener {
-            viewModel.stopSiren()
+            viewModel.toggleSiren()
         }
 
         binding.btnRequestGpsPermission.setOnClickListener {
@@ -295,7 +298,24 @@ class SosReadyToSendFragment : Fragment() {
                 }
                 launch {
                     viewModel.isSirenPlaying.collect { playing ->
-                        binding.cardSirenRinging.visibility = if (playing) View.VISIBLE else View.GONE
+                        val ctx = requireContext()
+                        if (playing) {
+                            binding.cardSirenRinging.setCardBackgroundColor(ContextCompat.getColor(ctx, R.color.amber_bg))
+                            binding.cardSirenRinging.strokeColor = ContextCompat.getColor(ctx, R.color.amber_border)
+                            binding.tvSirenStatus.text = "Siren is ringing"
+                            binding.tvSirenStatus.setTextColor(ContextCompat.getColor(ctx, R.color.amber_text))
+                            binding.btnStopSirenReady.text = getString(R.string.stop_siren)
+                            binding.btnStopSirenReady.backgroundTintList =
+                                ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.amber_dark))
+                        } else {
+                            binding.cardSirenRinging.setCardBackgroundColor(ContextCompat.getColor(ctx, R.color.surface_white))
+                            binding.cardSirenRinging.strokeColor = ContextCompat.getColor(ctx, R.color.divider_light)
+                            binding.tvSirenStatus.text = "Alarm Siren: Off"
+                            binding.tvSirenStatus.setTextColor(ContextCompat.getColor(ctx, R.color.text_primary))
+                            binding.btnStopSirenReady.text = "Turn On Siren"
+                            binding.btnStopSirenReady.backgroundTintList =
+                                ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.primary_blue))
+                        }
                     }
                 }
             }
@@ -323,10 +343,12 @@ class SosReadyToSendFragment : Fragment() {
                         val intentSenderRequest = IntentSenderRequest.Builder(exception.resolution).build()
                         locationSettingsLauncher.launch(intentSenderRequest)
                     } catch (_: Exception) {
+                        viewModel.markDeviceLocationOff()
                         if (openSettingsOnFallback) openLocationSettingsFallback()
                     }
-                } else if (openSettingsOnFallback) {
-                    openLocationSettingsFallback()
+                } else {
+                    viewModel.markDeviceLocationOff()
+                    if (openSettingsOnFallback) openLocationSettingsFallback()
                 }
             }
     }

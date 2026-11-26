@@ -11,6 +11,7 @@ import com.safeassist.maramag.model.UserProfile
 import com.safeassist.maramag.repository.SafeAssistRepository
 import com.safeassist.maramag.utils.EmergencyMessageFormatter
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -51,9 +52,50 @@ class SosViewModel(
     private val _includeGpsInMessage = MutableStateFlow(false)
     val includeGpsInMessage: StateFlow<Boolean> = _includeGpsInMessage.asStateFlow()
 
+    private val _secondsRemaining = MutableStateFlow(COUNTDOWN_SECONDS)
+    val secondsRemaining: StateFlow<Int> = _secondsRemaining.asStateFlow()
+
+    private val _countdownFinished = MutableStateFlow(false)
+    val countdownFinished: StateFlow<Boolean> = _countdownFinished.asStateFlow()
+
+    private var countdownJob: Job? = null
     private var locationJob: Job? = null
     private var hasPromptedLocationThisSos = false
     private var hasPromptedEnableLocationThisSos = false
+
+    fun startSosCountdown() {
+        countdownJob?.cancel()
+        locationJob?.cancel()
+        sirenManager.stopSiren()
+        _countdownFinished.value = false
+        _locationResult.value = LocationResult.Loading
+        _includeGpsInMessage.value = false
+
+        countdownJob = viewModelScope.launch {
+            val settings = repository.appSettings.first()
+            if (settings.sirenEnabled) sirenManager.startSiren()
+            if (settings.askGpsBeforeSending && locationProvider.hasLocationPermission()) {
+                fetchLocationIfPermitted()
+            }
+            for (sec in COUNTDOWN_SECONDS downTo 1) {
+                _secondsRemaining.value = sec
+                delay(1000L)
+            }
+            _secondsRemaining.value = 0
+            _countdownFinished.value = true
+        }
+    }
+
+    fun consumeCountdownFinished() {
+        _countdownFinished.value = false
+    }
+
+    fun cancelSos() {
+        countdownJob?.cancel()
+        locationJob?.cancel()
+        _countdownFinished.value = false
+        sirenManager.stopSiren()
+    }
 
     fun startSosSession() {
         locationJob?.cancel()
@@ -64,10 +106,18 @@ class SosViewModel(
         _includeGpsInMessage.value = false
         viewModelScope.launch {
             val settings = repository.appSettings.first()
-            if (settings.sirenEnabled) sirenManager.startSiren()
+            if (settings.sirenEnabled && !settings.caregiverModeEnabled) sirenManager.startSiren()
             if (settings.askGpsBeforeSending && locationProvider.hasLocationPermission()) {
                 fetchLocationIfPermitted()
             }
+        }
+    }
+
+    fun toggleSiren() {
+        if (sirenManager.isPlaying.value) {
+            sirenManager.stopSiren()
+        } else {
+            sirenManager.startSiren()
         }
     }
 
@@ -96,6 +146,12 @@ class SosViewModel(
     fun markLocationPermissionNeeded() {
         _includeGpsInMessage.value = false
         _locationResult.value = LocationResult.Unavailable("Location permission needed.")
+    }
+
+    fun markDeviceLocationOff() {
+        locationJob?.cancel()
+        _includeGpsInMessage.value = false
+        _locationResult.value = LocationResult.Unavailable("Turn on device Location to detect GPS.")
     }
 
     fun ensureLocationFetchedIfPermitted() {
@@ -137,7 +193,12 @@ class SosViewModel(
 
     override fun onCleared() {
         super.onCleared()
+        countdownJob?.cancel()
         locationJob?.cancel()
         sirenManager.stopSiren()
+    }
+
+    companion object {
+        private const val COUNTDOWN_SECONDS = 5
     }
 }
