@@ -52,7 +52,14 @@ class SosReadyToSendFragment : Fragment() {
         ActivityResultContracts.StartIntentSenderForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            viewModel.fetchLocationIfPermitted()
+            if (viewModel.isDeviceLocationEnabled()) {
+                viewModel.fetchLocationIfPermitted()
+            } else {
+                // Give the system location toggle a brief moment to settle after RESULT_OK
+                view?.postDelayed({
+                    if (isAdded) viewModel.fetchLocationIfPermitted()
+                }, 350L)
+            }
         } else {
             viewModel.markDeviceLocationOff()
             Toast.makeText(

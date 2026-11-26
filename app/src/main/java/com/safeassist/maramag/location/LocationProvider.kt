@@ -8,7 +8,6 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
-import android.os.CancellationSignal
 import android.os.Looper
 import androidx.core.content.ContextCompat
 import androidx.core.location.LocationManagerCompat
@@ -39,7 +38,7 @@ class LocationProvider(private val context: Context) {
     }
 
     @SuppressLint("MissingPermission")
-    suspend fun getCurrentOrLastKnownLocation(timeoutMs: Long = 15000L): LocationResult {
+    suspend fun getCurrentOrLastKnownLocation(timeoutMs: Long = 30000L): LocationResult {
         if (!hasLocationPermission()) {
             return LocationResult.Unavailable("Location permission needed. Using my saved address.")
         }
@@ -98,17 +97,13 @@ class LocationProvider(private val context: Context) {
             val lock = Any()
             val completed = AtomicBoolean(false)
             val remaining = AtomicInteger(providers.size)
-            val cancellationSignals = mutableListOf<CancellationSignal>()
-            val legacyListeners = mutableListOf<LocationListener>()
+            val listeners = mutableListOf<LocationListener>()
 
             fun cleanup() {
-                val signalsCopy: List<CancellationSignal>
                 val listenersCopy: List<LocationListener>
                 synchronized(lock) {
-                    signalsCopy = cancellationSignals.toList()
-                    listenersCopy = legacyListeners.toList()
+                    listenersCopy = listeners.toList()
                 }
-                signalsCopy.forEach { it.cancel() }
                 listenersCopy.forEach { listener ->
                     try {
                         lm.removeUpdates(listener)
@@ -133,46 +128,29 @@ class LocationProvider(private val context: Context) {
                 cleanup()
             }
 
+            // Use active location updates across enabled providers so offline GPS keeps
+            // acquiring satellites for the full timeout instead of failing early on null.
             for (provider in providers) {
                 if (completed.get()) break
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    val signal = CancellationSignal()
-                    synchronized(lock) {
-                        cancellationSignals.add(signal)
+                val listener = object : LocationListener {
+                    override fun onLocationChanged(location: Location) {
+                        finishWith(location)
                     }
-                    try {
-                        lm.getCurrentLocation(
-                            provider,
-                            signal,
-                            ContextCompat.getMainExecutor(context)
-                        ) { location ->
-                            finishWith(location)
-                        }
-                    } catch (_: Exception) {
-                        finishWith(null)
-                    }
-                } else {
-                    val listener = object : LocationListener {
-                        override fun onLocationChanged(location: Location) {
-                            finishWith(location)
-                        }
 
-                        @Deprecated("Deprecated in Java")
-                        override fun onStatusChanged(provider: String?, status: Int, extras: android.os.Bundle?) {}
-                        override fun onProviderEnabled(provider: String) {}
-                        override fun onProviderDisabled(provider: String) {
-                            finishWith(null)
-                        }
-                    }
-                    synchronized(lock) {
-                        legacyListeners.add(listener)
-                    }
-                    try {
-                        @Suppress("DEPRECATION")
-                        lm.requestSingleUpdate(provider, listener, Looper.getMainLooper())
-                    } catch (_: Exception) {
+                    @Deprecated("Deprecated in Java")
+                    override fun onStatusChanged(provider: String?, status: Int, extras: android.os.Bundle?) {}
+                    override fun onProviderEnabled(provider: String) {}
+                    override fun onProviderDisabled(provider: String) {
                         finishWith(null)
                     }
+                }
+                synchronized(lock) {
+                    listeners.add(listener)
+                }
+                try {
+                    lm.requestLocationUpdates(provider, 1000L, 0f, listener, Looper.getMainLooper())
+                } catch (_: Exception) {
+                    finishWith(null)
                 }
             }
         }
